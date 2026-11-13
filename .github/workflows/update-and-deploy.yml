@@ -54,12 +54,19 @@ jobs:
                       for item in page.get_by_text(label, exact=True).all():
                           try:
                               if item.is_visible():
-                                  item.click(timeout=1000)
+                                  item.evaluate("element => element.click()")
                                   page.wait_for_timeout(250)
                           except Exception:
                               pass
                   except Exception:
                       pass
+              # 리틀팍스 팝업의 투명 덮개가 남아 클릭을 막는 경우에만 덮개를 치웁니다.
+              try:
+                  page.locator("#lp_film").evaluate(
+                      "element => { element.style.pointerEvents = 'none'; element.style.display = 'none'; }"
+                  )
+              except Exception:
+                  pass
 
           def capture_response(response):
               try:
@@ -104,12 +111,15 @@ jobs:
               except Exception:
                   pass
 
-              # 팝업 덮개가 메뉴 클릭을 가로막을 수 있어 확인된 주소로 바로 이동합니다.
-              page.goto(
-                  "https://www.littlefox.co.kr/ko/studyHistory",
-                  wait_until="domcontentloaded"
+              # 사이트 메뉴 이동이 학습기록 데이터를 불러오므로 DOM 클릭으로 메뉴를 엽니다.
+              page.get_by_text("학습관리", exact=True).first.evaluate(
+                  "element => element.click()"
               )
-              page.wait_for_timeout(4500)
+              page.wait_for_timeout(1500)
+              page.get_by_role("link", name="학습기록", exact=True).first.evaluate(
+                  "element => element.click()"
+              )
+              page.wait_for_timeout(4000)
 
               # 페이지 번호를 순서대로 눌러 각 페이지의 응답을 수집합니다.
               page_numbers = set()
@@ -129,6 +139,12 @@ jobs:
                       page.wait_for_timeout(1800)
                   except Exception:
                       pass
+
+              if not responses:
+                  print("현재 페이지 경로:", urlsplit(page.url).path)
+                  print("로그인 입력칸 표시:", page.locator("input[type='password']").count() > 0)
+                  print("학습관리 메뉴 표시:", page.get_by_text("학습관리", exact=True).count() > 0)
+                  print("학습기록 링크 표시:", page.get_by_role("link", name="학습기록", exact=True).count() > 0)
 
               browser.close()
 

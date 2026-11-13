@@ -1,0 +1,126 @@
+:root {
+  color-scheme: light;
+  --ink: #202640;
+  --muted: #8890a7;
+  --blue: #496bea;
+  --blue-dark: #3453c7;
+  --lavender: #f1f3ff;
+  --line: #edf0f7;
+  --mint: #e4f7ef;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Noto Sans KR', sans-serif;
+  background: #f5f7ff;
+  color: var(--ink);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background:
+    radial-gradient(ellipse at 85% -8%, #e4eaff 0, transparent 34rem),
+    #f5f7ff;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button { font: inherit; }
+
+.app-shell {
+  width: min(100%, 620px);
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: max(22px, env(safe-area-inset-top)) 22px max(24px, env(safe-area-inset-bottom));
+}
+
+.topbar { display: flex; align-items: center; gap: 12px; margin: 4px 2px 22px; }
+.brand-mark {
+  display: grid; place-items: center; width: 44px; height: 44px; flex: none;
+  border-radius: 15px; background: linear-gradient(145deg, #6887ff, #3f5ed8);
+  color: white; font-size: 24px; box-shadow: 0 8px 18px #496bea38;
+}
+.brand-copy { min-width: 0; }
+.eyebrow { margin: 0 0 4px; color: #8d96b5; font-size: 9px; font-weight: 700; letter-spacing: .13em; }
+h1 { margin: 0; font-size: 19px; font-weight: 800; letter-spacing: -.04em; }
+.install-button {
+  margin-left: auto; border: 0; border-radius: 12px; padding: 10px 13px;
+  background: #e9edff; color: var(--blue-dark); font-size: 12px; font-weight: 700;
+}
+
+.summary-card {
+  position: relative; display: flex; align-items: center; justify-content: space-between;
+  min-height: 137px; overflow: hidden; padding: 24px 25px; border-radius: 25px;
+  background: linear-gradient(115deg, #496bea, #6f86f2); color: white;
+  box-shadow: 0 15px 28px #496bea25;
+}
+.summary-label { margin: 0 0 7px; color: #e4e9ff; font-size: 12px; font-weight: 600; }
+.summary-time { margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -.04em; }
+.summary-detail { margin: 7px 0 0; color: #e6eaff; font-size: 11px; }
+.summary-art {
+  display: grid; place-items: center; width: 90px; height: 90px; margin-right: 8px;
+  border: 1px solid #ffffff42; border-radius: 50%; background: #ffffff1c; transform: rotate(-8deg);
+}
+.summary-art span { font-size: 42px; filter: drop-shadow(0 6px 5px #273e9b30); }
+.summary-art i { position: absolute; top: 8px; right: 8px; color: #ffe08b; font-size: 20px; font-style: normal; }
+
+.calendar-card {
+  margin-top: 18px; padding: 20px 16px 15px; border: 1px solid #eef0f8;
+  border-radius: 25px; background: #fff; box-shadow: 0 10px 30px #243a7810;
+}
+.calendar-heading { display: flex; align-items: center; justify-content: space-between; margin: 0 4px 18px; }
+.calendar-heading h2 { margin: 0; font-size: 17px; font-weight: 800; letter-spacing: -.03em; }
+.month-arrow {
+  display: grid; place-items: center; width: 35px; height: 35px; border: 0; border-radius: 12px;
+  background: #f3f5fc; color: #66708e; font-size: 27px; line-height: 1;
+}
+.month-arrow:active, .install-button:active { transform: scale(.96); }
+.weekdays, .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.weekdays { margin-bottom: 7px; color: #a4aabe; text-align: center; font-size: 10px; font-weight: 700; }
+.weekdays span:first-child { color: #ee8994; }
+.calendar-grid { row-gap: 4px; }
+.day-cell {
+  position: relative; display: flex; min-width: 0; min-height: 62px; flex-direction: column; align-items: center;
+  justify-content: flex-start; gap: 4px; padding: 6px 1px 3px; border: 0; border-radius: 14px;
+  background: transparent; color: var(--ink); text-align: center;
+}
+.day-cell.empty { pointer-events: none; }
+.day-number { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; font-size: 12px; font-weight: 600; }
+.day-cell.sunday .day-number { color: #eb8792; }
+.day-cell.today .day-number { background: #e9edff; color: var(--blue-dark); }
+.day-cell.has-record { background: #f5f7ff; }
+.day-cell.has-record .day-number { background: var(--blue); color: #fff; }
+.day-time { max-width: 100%; overflow: hidden; color: #6574b5; font-size: 8px; font-weight: 700; white-space: nowrap; }
+.calendar-note { display: flex; align-items: center; gap: 7px; margin: 13px 3px 0; color: #9aa1b5; font-size: 10px; }
+.legend-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--blue); }
+.app-footer { padding: 20px 0 2px; color: #a3aac0; text-align: center; font-size: 11px; }
+
+.day-dialog {
+  width: min(100%, 540px); max-width: 540px; max-height: min(82vh, 720px); margin: auto;
+  padding: 10px 22px max(24px, env(safe-area-inset-bottom)); border: 0; border-radius: 26px;
+  background: #fff; color: var(--ink); box-shadow: 0 18px 70px #1c285538;
+}
+.day-dialog::backdrop { background: #18203b75; backdrop-filter: blur(3px); }
+.dialog-grabber { width: 38px; height: 4px; margin: 0 auto 18px; border-radius: 9px; background: #e2e5ef; }
+.dialog-heading { display: flex; align-items: flex-start; justify-content: space-between; }
+.dialog-heading h2 { margin: 0; font-size: 22px; letter-spacing: -.04em; }
+.close-button { width: 34px; height: 34px; border: 0; border-radius: 50%; background: #f3f5fa; color: #68718c; font-size: 23px; line-height: 1; }
+.day-summary { display: flex; align-items: center; justify-content: space-between; margin: 18px 0 14px; padding: 14px 15px; border-radius: 15px; background: var(--lavender); color: #6c7593; font-size: 12px; }
+.day-summary strong { color: var(--blue-dark); font-size: 15px; }
+.record-list { display: grid; gap: 9px; overflow: auto; max-height: 48vh; padding-bottom: 4px; }
+.record-card { padding: 14px; border: 1px solid var(--line); border-radius: 16px; }
+.record-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.record-title { margin: 0; font-size: 13px; font-weight: 700; line-height: 1.5; }
+.record-time { flex: none; color: var(--blue-dark); font-size: 11px; font-weight: 700; }
+.record-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.record-chip { padding: 5px 8px; border-radius: 8px; background: #f4f6fb; color: #78809a; font-size: 10px; font-weight: 600; }
+.record-chip.score { background: var(--mint); color: #338a69; }
+.empty-state { padding: 25px 10px; color: #999fb2; text-align: center; font-size: 13px; }
+.toast { position: fixed; right: 20px; bottom: max(20px, env(safe-area-inset-bottom)); left: 20px; z-index: 5; display: none; width: fit-content; max-width: calc(100% - 40px); margin: auto; padding: 11px 16px; border-radius: 12px; background: #222b47; color: white; font-size: 12px; }
+.toast.show { display: block; }
+
+@media (max-width: 380px) {
+  .app-shell { padding-right: 15px; padding-left: 15px; }
+  .calendar-card { padding-right: 10px; padding-left: 10px; }
+  .day-cell { min-height: 57px; }
+  .day-time { font-size: 7px; }
+}

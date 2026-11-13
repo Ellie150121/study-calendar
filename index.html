@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f5f7ff" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="학습 달력" />
+    <title>우리 아이 학습 달력</title>
+    <link rel="manifest" href="./manifest.json" />
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" sizes="180x180" href="./icon-180.png" />
+    <link rel="stylesheet" href="./app.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div class="brand-mark" aria-hidden="true">✦</div>
+        <div class="brand-copy">
+          <p class="eyebrow">LITTLE FOX · STUDY TRACKER</p>
+          <h1>우리 아이 학습 달력</h1>
+        </div>
+        <button id="installButton" class="install-button" hidden>앱 설치</button>
+      </header>
+
+      <section class="summary-card" aria-label="이번 달 학습 요약">
+        <div>
+          <p class="summary-label">이번 달 학습 시간</p>
+          <p id="monthTotal" class="summary-time">불러오는 중</p>
+          <p id="monthCount" class="summary-detail"></p>
+        </div>
+        <div class="summary-art" aria-hidden="true"><span>📚</span><i>✦</i></div>
+      </section>
+
+      <section class="calendar-card" aria-label="학습 달력">
+        <div class="calendar-heading">
+          <button id="previousMonth" class="month-arrow" aria-label="이전 달">‹</button>
+          <h2 id="monthLabel"></h2>
+          <button id="nextMonth" class="month-arrow" aria-label="다음 달">›</button>
+        </div>
+        <div class="weekdays" aria-hidden="true">
+          <span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
+        </div>
+        <div id="calendarGrid" class="calendar-grid" role="grid" aria-label="날짜"></div>
+        <p class="calendar-note"><span class="legend-dot"></span> 공부한 날을 누르면 학습 내용을 볼 수 있어요</p>
+      </section>
+
+      <footer class="app-footer">차곡차곡 쌓이는 오늘의 영어 공부 🌱</footer>
+    </main>
+
+    <dialog id="dayDialog" class="day-dialog">
+      <div class="dialog-grabber" aria-hidden="true"></div>
+      <div class="dialog-heading">
+        <div>
+          <p class="eyebrow">DAILY STUDY</p>
+          <h2 id="dialogDate"></h2>
+        </div>
+        <button id="closeDialog" class="close-button" aria-label="닫기">×</button>
+      </div>
+      <div class="day-summary">
+        <span>오늘의 학습 시간</span>
+        <strong id="dayTotal"></strong>
+      </div>
+      <div id="recordList" class="record-list"></div>
+    </dialog>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script src="./app.js" defer></script>
+  </body>
+</html>

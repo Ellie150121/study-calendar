@@ -111,14 +111,12 @@ jobs:
               except Exception:
                   pass
 
-              # 사이트 메뉴 이동이 학습기록 데이터를 불러오므로 DOM 클릭으로 메뉴를 엽니다.
-              page.get_by_text("학습관리", exact=True).first.evaluate(
-                  "element => element.click()"
-              )
-              page.wait_for_timeout(1500)
-              page.get_by_role("link", name="학습기록", exact=True).first.evaluate(
-                  "element => element.click()"
-              )
+              # 팝업 덮개를 숨긴 뒤 일반 클릭으로 학습관리와 학습기록을 엽니다.
+              page.get_by_text("학습관리", exact=True).first.click(timeout=10000)
+              page.wait_for_timeout(2500)
+              history_link = page.get_by_role("link", name="학습기록", exact=True).first
+              history_link.wait_for(state="visible", timeout=10000)
+              history_link.click(timeout=10000)
               page.wait_for_timeout(4000)
 
               # 페이지 번호를 순서대로 눌러 각 페이지의 응답을 수집합니다.

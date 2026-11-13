@@ -1,0 +1,191 @@
+name: 학습 기록 갱신 및 달력 배포
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  update-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: 저장소 가져오기
+        uses: actions/checkout@v4
+
+      - name: Python 준비
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Playwright 설치
+        run: |
+          pip install playwright
+          playwright install --with-deps chromium
+
+      - name: 리틀팍스 기록 가져오기
+        env:
+          LF_ID: ${{ secrets.LITTLEFOX_ID }}
+          LF_PW: ${{ secrets.LITTLEFOX_PW }}
+          LF_CHILD_NAME: ${{ secrets.LITTLEFOX_CHILD_NAME }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from datetime import datetime
+          from urllib.parse import urlsplit
+          from playwright.sync_api import sync_playwright
+
+          responses = []
+
+          def close_popups(page):
+              for label in ["닫기", "×"]:
+                  try:
+                      for item in page.get_by_text(label, exact=True).all():
+                          try:
+                              if item.is_visible():
+                                  item.click(timeout=1000)
+                                  page.wait_for_timeout(250)
+                          except Exception:
+                              pass
+                  except Exception:
+                      pass
+
+          def capture_response(response):
+              try:
+                  path = urlsplit(response.url).path
+                  if path.endswith("/ko/studyHistory/showStudyLog") and response.status == 200:
+                      responses.append(response.text())
+              except Exception:
+                  pass
+
+          with sync_playwright() as p:
+              browser = p.chromium.launch()
+              context = browser.new_context(locale="ko-KR")
+              page = context.new_page()
+              page.set_default_timeout(10000)
+              page.on("dialog", lambda dialog: dialog.accept())
+              page.on("response", capture_response)
+
+              page.goto("https://www.littlefox.co.kr/", wait_until="domcontentloaded")
+              page.wait_for_timeout(2500)
+              close_popups(page)
+
+              password = page.locator("input[type='password']").first
+              if password.count() == 0:
+                  raise RuntimeError("로그인 입력칸을 찾지 못했습니다.")
+              password.locator("xpath=preceding::input[1]").fill(os.environ["LF_ID"])
+              password.fill(os.environ["LF_PW"])
+              page.get_by_text("로그인", exact=True).first.click()
+              page.wait_for_timeout(3500)
+              close_popups(page)
+
+              child_name = os.environ["LF_CHILD_NAME"]
+              try:
+                  child = page.get_by_text(child_name, exact=True).first
+                  if child.is_visible(timeout=2500):
+                      enter = child.locator(
+                          "xpath=following::*[normalize-space(.)='입장' or @value='입장'][1]"
+                      )
+                      if enter.count() > 0:
+                          enter.click()
+                          page.wait_for_timeout(3500)
+                          close_popups(page)
+              except Exception:
+                  pass
+
+              page.get_by_text("학습관리", exact=True).first.click()
+              page.wait_for_timeout(1500)
+              page.get_by_role("link", name="학습기록", exact=True).first.click()
+              page.wait_for_timeout(3500)
+
+              # 페이지 번호를 순서대로 눌러 각 페이지의 응답을 수집합니다.
+              page_numbers = set()
+              for link in page.locator("a").all():
+                  try:
+                      label = (link.inner_text(timeout=1000) or "").strip()
+                      if label.isdigit():
+                          page_numbers.add(int(label))
+                  except Exception:
+                      pass
+
+              for number in sorted(n for n in page_numbers if n > 1):
+                  try:
+                      page.get_by_role("link", name=str(number), exact=True).last.click(timeout=3000)
+                      page.wait_for_timeout(1800)
+                  except Exception:
+                      pass
+
+              browser.close()
+
+          rows_by_key = {}
+          for body in responses:
+              payload = json.loads(body)
+              for item in payload.get("list", []):
+                  stamp = datetime.strptime(item["QRDATE2"], "%Y/%m/%d %H:%M")
+                  content_type = item.get("CONT_TYPE", "")
+                  if content_type == "Movie":
+                      seconds = item.get("MOVIE_RUNTIME", 0)
+                  elif content_type == "Song":
+                      seconds = item.get("SONG_RUNTIME", 0)
+                  else:
+                      seconds = item.get("PAGE_RUNTIME", 0)
+
+                  row = {
+                      "date": stamp.strftime("%Y-%m-%d"),
+                      "time": stamp.strftime("%H:%M"),
+                      "title": item.get("CONT_TITLE", ""),
+                      "score": item.get("STUDY_POINT", ""),
+                      "seconds": round(float(seconds or 0)),
+                  }
+                  key = (row["date"], row["time"], row["title"])
+                  rows_by_key[key] = row
+
+          records = sorted(rows_by_key.values(), key=lambda row: (row["date"], row["time"]))
+          if not records:
+              raise RuntimeError("학습 기록을 가져오지 못했습니다. 공개 데이터를 덮어쓰지 않았습니다.")
+
+          with open("data/records.json", "w", encoding="utf-8") as output:
+              json.dump(records, output, ensure_ascii=False, indent=2)
+              output.write("\n")
+
+          print(f"학습 기록 {len(records)}건을 정리했습니다.")
+          PY
+
+      - name: 새 기록 저장
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/records.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Update study calendar data"
+            git push
+          fi
+
+      - name: Pages 설정
+        uses: actions/configure-pages@v5
+
+      - name: 앱 파일 묶기
+        run: |
+          mkdir -p _site/data
+          cp index.html app.css app.js manifest.json sw.js icon.svg icon-180.png icon-192.png icon-512.png _site/
+          cp data/records.json _site/data/records.json
+
+      - name: Pages 파일 업로드
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Pages 배포
+        id: deployment
+        uses: actions/deploy-pages@v4

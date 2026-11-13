@@ -105,6 +105,10 @@ jobs:
                   pass
 
               # 이전에 성공했던 테스트와 동일하게 메뉴를 순서대로 클릭합니다.
+              # 클릭을 가로막는 사이트 팝업 덮개만 메뉴 이동 직전에 제거합니다.
+              page.evaluate(
+                  "() => document.querySelectorAll('#lp_film').forEach(element => element.remove())"
+              )
               page.get_by_text("학습관리", exact=True).first.click(timeout=10000)
               page.wait_for_timeout(2000)
               page.get_by_role("link", name="학습기록", exact=True).first.click(timeout=10000)

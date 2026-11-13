@@ -111,8 +111,21 @@ jobs:
               )
               page.get_by_text("학습관리", exact=True).first.click(timeout=10000)
               page.wait_for_timeout(2000)
-              page.get_by_role("link", name="학습기록", exact=True).first.click(timeout=10000)
+
+              # 사이트에서 확인한 실제 링크 경로를 사용합니다.
+              history_links = page.locator("a[href*='/ko/studyHistory']")
+              print("학습관리 화면 경로:", urlsplit(page.url).path)
+              print("학습기록 링크 수:", history_links.count())
+              if history_links.count() > 0:
+                  history_links.first.evaluate("element => element.click()")
+              else:
+                  # 링크가 DOM에 없으면 확인된 학습기록 주소를 엽니다.
+                  page.goto(
+                      "https://www.littlefox.co.kr/ko/studyHistory",
+                      wait_until="domcontentloaded"
+                  )
               page.wait_for_timeout(5000)
+              print("학습기록 화면 경로:", urlsplit(page.url).path)
 
               # 페이지 번호를 순서대로 눌러 각 페이지의 응답을 수집합니다.
               page_numbers = set()

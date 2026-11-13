@@ -104,10 +104,12 @@ jobs:
               except Exception:
                   pass
 
-              page.get_by_text("학습관리", exact=True).first.click()
-              page.wait_for_timeout(1500)
-              page.get_by_role("link", name="학습기록", exact=True).first.click()
-              page.wait_for_timeout(3500)
+              # 팝업 덮개가 메뉴 클릭을 가로막을 수 있어 확인된 주소로 바로 이동합니다.
+              page.goto(
+                  "https://www.littlefox.co.kr/ko/studyHistory",
+                  wait_until="domcontentloaded"
+              )
+              page.wait_for_timeout(4500)
 
               # 페이지 번호를 순서대로 눌러 각 페이지의 응답을 수집합니다.
               page_numbers = set()
@@ -121,7 +123,9 @@ jobs:
 
               for number in sorted(n for n in page_numbers if n > 1):
                   try:
-                      page.get_by_role("link", name=str(number), exact=True).last.click(timeout=3000)
+                      page.get_by_role("link", name=str(number), exact=True).last.evaluate(
+                          "element => element.click()"
+                      )
                       page.wait_for_timeout(1800)
                   except Exception:
                       pass

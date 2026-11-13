@@ -111,7 +111,12 @@ jobs:
               except Exception:
                   pass
 
-              # 팝업 덮개를 숨긴 뒤 일반 클릭으로 학습관리와 학습기록을 엽니다.
+              # 닫기 처리 뒤에도 팝업 덮개가 다시 생길 수 있어 메뉴 클릭 직전에 제거합니다.
+              page.evaluate(
+                  "() => document.querySelectorAll('#lp_film').forEach(element => element.remove())"
+              )
+
+              # 일반 클릭으로 학습관리와 학습기록을 엽니다.
               page.get_by_text("학습관리", exact=True).first.click(timeout=10000)
               page.wait_for_timeout(2500)
               history_link = page.get_by_role("link", name="학습기록", exact=True).first

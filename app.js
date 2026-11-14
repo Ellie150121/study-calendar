@@ -28,6 +28,7 @@ let currentUser=null;
 let readingRecords=[];
 let readingUnsubscribe=null;
 let editingBookId=null;
+let authErrorMessage='';
 const byDate=new Map();
 const monthNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
 const weekNames=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -75,6 +76,21 @@ async function loadRecords(){
  catch(error){monthTotal.textContent='Unavailable';monthCount.textContent='Connect to the internet and try again.';detailDate.textContent='Records unavailable';emptyState.hidden=false;emptyState.textContent='Connect to the internet, then reload this page.';showToast('Could not load study records.');console.error(error);}
 }
 function showToast(message){toast.textContent=message;toast.classList.add('show');window.setTimeout(()=>toast.classList.remove('show'),3200);}
+function showAuthError(error){
+ const code=error&&error.code?error.code:'auth/unknown';
+ const messages={
+  'auth/unauthorized-domain':'This app address is not authorized in Firebase. Add ellie150121.github.io under Authentication → Settings → Authorized domains.',
+  'auth/operation-not-allowed':'Google sign-in is not enabled for this Firebase project.',
+  'auth/popup-blocked':'The browser blocked the Google sign-in window. Open the app in Chrome and allow pop-ups for this site.',
+  'auth/popup-closed-by-user':'The Google sign-in window closed before sign-in finished.',
+  'auth/network-request-failed':'Google sign-in could not connect. Check the internet connection and try again.',
+  'auth/cancelled-popup-request':'Another Google sign-in window is already open.'
+ };
+ authErrorMessage=(messages[code]||'Google sign-in did not finish. Error code: '+code)+' ( '+code+' )';
+ readingAuthMessage.textContent=authErrorMessage;
+ readingAuthMessage.style.color='#b94f3d';
+ console.error('Google sign-in failed:',code,error&&error.message||'');
+}
 window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();installPrompt=event;const button=document.querySelector('#installButton');button.hidden=false;button.addEventListener('click',async()=>{if(!installPrompt)return;installPrompt.prompt();await installPrompt.userChoice;installPrompt=null;button.hidden=true;},{once:true});});
 if('serviceWorker'in navigator&&/^https?:$/.test(location.protocol)){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(console.error));}
 const OWNER='Ellie150121',REPO='study-calendar',WORKFLOW='update-and-deploy.yml',KEY='lf_update_key';
@@ -99,11 +115,14 @@ function setupFirebase(){
  }
  if(!window.firebase){readingAuthMessage.textContent='Could not load secure sync. Check your internet connection and reload.';return;}
  try{if(!firebase.apps.length)firebase.initializeApp(config);auth=firebase.auth();db=firebase.firestore();firebaseReady=true;googleSignIn.hidden=false;addBookButton.disabled=false;
-  auth.getRedirectResult().catch(error=>showToast('Google sign-in failed: '+error.message));
+  auth.getRedirectResult().then(result=>{
+   if(result&&result.user){authErrorMessage='';showToast('Signed in as '+(result.user.email||'Google account'));}
+  }).catch(showAuthError);
   auth.onAuthStateChanged(user=>{
    currentUser=user;googleSignIn.hidden=!!user;googleSignOut.hidden=!user;signedInAs.hidden=!user;addBookButton.disabled=!user;
    signedInAs.textContent=user?'Synced as '+(user.email||'Google account'):'';
-   readingAuthMessage.textContent=user?'Your book notes sync securely on this account.':'Sign in with the same Google account on each device to sync.';
+   if(user){authErrorMessage='';readingAuthMessage.style.color='';readingAuthMessage.textContent='Your book notes sync securely on this account.';}
+   else{readingAuthMessage.textContent=authErrorMessage||'Sign in with the same Google account on each device to sync.';}
    if(readingUnsubscribe){readingUnsubscribe();readingUnsubscribe=null;}
    readingRecords=[];
    if(user){readingUnsubscribe=db.collection('users').doc(user.uid).collection('readingBooks').onSnapshot(snapshot=>{readingRecords=snapshot.docs.map(doc=>({id:doc.id,...doc.data()}));renderReadingRecords();},error=>{console.error(error);showToast('Could not load book notes. Check Firestore rules.');});}
@@ -129,7 +148,23 @@ function renderReadingRecords(){
 function resetReadingForm(){editingBookId=null;readingForm.reset();readingForm.hidden=true;document.querySelector('#bookUnit').value='pages';document.querySelector('.save-reading').textContent='Save entry';}
 addBookButton.addEventListener('click',()=>{if(!currentUser){showToast('Sign in with Google first.');return;}resetReadingForm();readingDateLabel.textContent=formatDayHeading(selectedDate);readingForm.hidden=false;document.querySelector('#bookTitle').focus();});
 document.querySelector('#cancelReading').addEventListener('click',resetReadingForm);
-googleSignIn.addEventListener('click',async()=>{if(!firebaseReady)return;try{const provider=new firebase.auth.GoogleAuthProvider();await auth.signInWithRedirect(provider);}catch(error){console.error(error);showToast('Could not start Google sign-in.');}});
+googleSignIn.addEventListener('click',async()=>{
+ if(!firebaseReady){showAuthError({code:'auth/not-initialized'});return;}
+ googleSignIn.disabled=true;
+ const oldText=googleSignIn.textContent;
+ googleSignIn.textContent='Opening Google…';
+ authErrorMessage='';readingAuthMessage.style.color='';readingAuthMessage.textContent='Waiting for Google sign-in…';
+ try{
+  const provider=new firebase.auth.GoogleAuthProvider();
+  provider.setCustomParameters({prompt:'select_account'});
+  const result=await auth.signInWithPopup(provider);
+  if(!result||!result.user)throw new Error('Google did not return a signed-in user.');
+  authErrorMessage='';
+  readingAuthMessage.style.color='';
+  readingAuthMessage.textContent='Signed in. Connecting your book notes…';
+ }catch(error){showAuthError(error);}
+ finally{googleSignIn.disabled=false;googleSignIn.textContent=oldText;}
+});
 googleSignOut.addEventListener('click',async()=>{if(auth)await auth.signOut();resetReadingForm();});
 readingForm.addEventListener('submit',async event=>{
  event.preventDefault();if(!currentUser||!db||!selectedDate)return;

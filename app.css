@@ -124,3 +124,13 @@ h1 { margin: 0; font-size: 19px; font-weight: 800; letter-spacing: -.04em; }
   .day-cell { min-height: 57px; }
   .day-time { font-size: 7px; }
 }
+
+
+/* 상단 요약 상자: 작게, 연한 파스텔 */
+.summary-card { min-height: 96px; padding: 16px 20px; border-radius: 20px; background: linear-gradient(115deg, #dde6ff, #eef2ff); color: #3f4f8f; box-shadow: 0 8px 18px #496bea14; }
+.summary-label { margin-bottom: 4px; color: #6f7fb8; font-size: 11px; }
+.summary-time { font-size: 20px; }
+.summary-detail { margin-top: 4px; color: #7f8cbc; font-size: 10px; }
+.summary-art { width: 60px; height: 60px; margin-right: 0; border-color: #ffffff99; background: #ffffff80; }
+.summary-art span { font-size: 28px; filter: none; }
+.summary-art i { top: 8px; right: 10px; font-size: 13px; }

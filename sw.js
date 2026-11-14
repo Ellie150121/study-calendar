@@ -1,4 +1,4 @@
-const CACHE_NAME = 'littlefox-study-calendar-v3';
+const CACHE_NAME = 'littlefox-study-calendar-v4';
 const APP_FILES = ['./', './index.html', './app.css', './app.js', './manifest.json', './icon.svg'];
 
 self.addEventListener('install', event => {

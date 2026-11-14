@@ -159,3 +159,11 @@ h1 { font-size: 15px; }
 .summary-art span { font-size: 20px; }
 .summary-art i { top: 5px; right: 7px; font-size: 10px; }
 .calendar-card { margin-top: 14px; }
+
+
+/* 헤더: 아이콘 폭 줄이고, 업데이트 아이콘을 제목 오른쪽 옆에 */
+.brand-mark { width: 26px; }
+.topbar { justify-content: flex-start; }
+#updateButton.update-icon { width: 30px; height: 30px; padding: 0; margin: 0 0 0 4px; flex: none; border-radius: 10px; background: #dde6ff; color: #3f4f8f; font-size: 17px; line-height: 1; }
+#updateButton.update-icon:disabled { background: #eef2ff; color: #aab6dd; }
+.update-box { margin-top: 10px; }

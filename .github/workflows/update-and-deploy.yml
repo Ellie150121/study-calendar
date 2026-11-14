@@ -115,10 +115,10 @@ jobs:
                   pass
 
               # 이전에 기록을 불러왔던 메뉴 이동 순서를 그대로 사용합니다.
-              page.get_by_text("학습관리", exact=True).first.click(timeout=10000)
+              page.evaluate("document.querySelectorAll('[class*=LFADDon]').forEach(e => e.remove())"); page.get_by_text("학습관리", exact=True).first.evaluate("e => (e.closest('button, a') || e).click()")
               page.wait_for_timeout(2000)
               page.on("response", capture_response)
-              page.get_by_role("link", name="학습기록", exact=True).first.click(timeout=10000)
+              page.evaluate("document.querySelectorAll('[class*=LFADDon]').forEach(e => e.remove())"); page.get_by_role("link", name="학습기록", exact=True).first.evaluate("e => e.click()")
               page.wait_for_timeout(7000)
               try:
                   page.wait_for_load_state("networkidle", timeout=15000)

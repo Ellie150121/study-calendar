@@ -2,6 +2,8 @@ name: 학습 기록 갱신 및 달력 배포
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "30 14 * * *"
 
 permissions:
   contents: write
@@ -152,6 +154,9 @@ jobs:
               browser.close()
 
           rows_by_key = {}
+          if os.path.exists("data/records.json"):
+              for old in json.load(open("data/records.json", encoding="utf-8")):
+                  rows_by_key[(old["date"], old["time"], old["title"])] = old
           for body in responses:
               payload = json.loads(body)
               for item in payload.get("list", []):

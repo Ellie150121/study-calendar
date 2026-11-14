@@ -1,4 +1,4 @@
-const CACHE_NAME = 'littlefox-study-calendar-v6';
+const CACHE_NAME = 'littlefox-study-calendar-network-first';
 const APP_FILES = ['./', './index.html', './app.css', './app.js', './manifest.json', './icon.svg'];
 
 self.addEventListener('install', event => {
@@ -13,6 +13,7 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
+// 인터넷에서 새 파일을 먼저 받고, 연결이 안 될 때만 저장된 파일을 보여 줍니다.
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
   if (event.request.method !== 'GET' || url.origin !== self.location.origin) return;
@@ -29,10 +30,12 @@ self.addEventListener('fetch', event => {
   }
 
   event.respondWith(
-    caches.match(event.request).then(cached => cached || fetch(event.request).then(response => {
-      const copy = response.clone();
-      caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+    fetch(event.request, { cache: 'no-store' }).then(response => {
+      if (response.ok) {
+        const copy = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+      }
       return response;
-    }))
+    }).catch(() => caches.match(event.request).then(cached => cached || caches.match('./index.html')))
   );
 });

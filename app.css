@@ -1,66 +1,75 @@
-:root{color-scheme:light;--ink:#5c4e48;--muted:#a68070;--peach:#f6c3aa;--coral:#eb7e78;font-family:'Comic Sans MS','Comic Sans',cursive;color:var(--ink);background:#fffdfb}
-*{box-sizing:border-box}
-body{min-width:320px;min-height:100vh;margin:0;background-color:#fffdfb;background-image:linear-gradient(#f7f3f0 1px,transparent 1px),linear-gradient(90deg,#f7f3f0 1px,transparent 1px);background-size:12px 12px;-webkit-tap-highlight-color:transparent}
-button{font:inherit}
-.app-shell{width:min(100%,780px);min-height:100vh;margin:0 auto;padding:max(18px,env(safe-area-inset-top)) 24px max(22px,env(safe-area-inset-bottom))}
-.topbar{position:relative;display:flex;align-items:flex-start;min-height:160px;padding:8px 142px 18px 24px}
-.brand-copy{position:relative;z-index:1;width:100%;min-width:0}
-.title-wrap{position:relative;display:inline-block;max-width:100%}
-h1{margin:0;color:var(--ink);font-family:'Comic Sans MS','Comic Sans',cursive;font-size:clamp(24px,5.2vw,42px);font-weight:700;line-height:1.12;letter-spacing:-.035em}
-.paperclip{position:absolute;width:16px;height:26px;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
-.clip-green{left:-22px;top:-2px;stroke:#398969;transform:rotate(-16deg)}
-.clip-yellow{right:4px;bottom:-18px;stroke:#efb638;transform:rotate(20deg)}
-.subtitle{margin:8px 0 0;color:var(--muted);font-size:clamp(14px,2.8vw,19px)}
-.monthly-line{display:flex;align-items:center;gap:4px;margin:8px 0 0;color:var(--muted);font-size:clamp(12px,2.2vw,15px)}
-.monthly-line:before{width:8px;height:8px;margin-right:5px;border-radius:50%;background:var(--coral);content:''}
-.monthly-line strong{font-weight:500}
-.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-.hero-art{position:absolute;top:17px;right:7px;width:122px;height:138px}
-.mascot{position:absolute;right:0;bottom:0;width:112px;height:112px;object-fit:contain}
-.lamp{position:absolute;top:-8px;right:1px;z-index:1;width:38px;height:46px}
-.lamp-wire{stroke:#5c7180;stroke-width:2}.lamp-cap{fill:#7e9aac}.lamp-shade{fill:#b7d8e7}.lamp-rim{stroke:#7898aa;stroke-width:1.5}.lamp-glow{stroke:#ffd36a;stroke-width:2;stroke-linecap:round}
-.install-button{position:absolute;top:99px;right:128px;z-index:3;width:30px;height:30px;padding:0;border:0;border-radius:50%;background:#e5f1e9;color:#398969;font-size:17px;line-height:1;cursor:pointer}
-.install-button[hidden]{display:none}
-.calendar-card{margin-top:2px;padding:14px 15px 15px;border:2px solid var(--peach);border-radius:24px;background:#fff}
-.calendar-heading{display:flex;align-items:center;justify-content:space-between;min-height:68px;margin:0 0 12px;padding:0 14px;border:2px solid var(--peach);border-radius:22px;background:#fff8f4}
-.calendar-heading h2{margin:0;font-size:clamp(20px,3.6vw,28px);font-weight:600;text-align:center;letter-spacing:-.025em}
-.month-arrow{display:grid;place-items:center;width:34px;height:34px;flex:none;border:0;border-radius:50%;background:transparent;color:#dc927d;font:30px/1 Arial,sans-serif}
-.weekdays,.calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
-.weekdays{margin-bottom:6px;color:#7c716d;text-align:center;font-size:14px;font-weight:700}
-.weekdays span:first-child{color:var(--coral)}.weekdays span:last-child{color:#6b91c8}
-.calendar-grid{overflow:hidden;border-top:1px solid #f2e3dc;border-left:1px solid #f2e3dc}
-.day-cell{display:flex;min-width:0;height:72px;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:0;padding:5px;border:0;border-right:1px solid #f2e3dc;border-bottom:1px solid #f2e3dc;border-radius:0;background:#fff;color:var(--ink);text-align:left;cursor:pointer}
-.day-cell.empty{pointer-events:none}
-.day-number{display:grid;place-items:center;width:28px;height:28px;flex:none;border-radius:50%;color:var(--ink);font-size:15px;font-weight:400;line-height:1}
-.day-cell.sunday .day-number{color:var(--coral)}.day-cell.saturday .day-number{color:#6b91c8}
-.day-cell.selected .day-number{background:#f3b3a4;color:#fff}
-.day-cell.today:not(.selected) .day-number{box-shadow:inset 0 0 0 1px var(--peach)}
-.day-meta{display:flex;min-width:0;align-items:center;gap:4px;margin:2px 0 0 2px;white-space:nowrap}
-.study-dot{width:6px;height:6px;flex:none;border-radius:50%;background:var(--coral)}
-.day-time{overflow:hidden;color:var(--muted);font-size:9px;line-height:1.2;white-space:nowrap}
-.detail-card{margin-top:15px;padding:14px 16px 16px;border:2px solid var(--peach);border-radius:22px;background:#fff}
-.detail-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px;padding:0 6px 9px;border-bottom:1px solid #f2e3dc}
-.detail-heading h2{margin:0;font-size:clamp(19px,4vw,26px);font-weight:700}.detail-heading strong{flex:none;color:#df806d;font-size:17px}
-.record-list{display:grid;gap:7px;margin-top:8px}
-.record-row{display:grid;grid-template-columns:58px minmax(0,1fr) 48px;align-items:center;gap:8px;min-height:47px;padding:6px 10px;border-radius:12px;background:#fff5ef}
-.record-row:nth-child(even){background:#fff}
-.record-time{color:var(--muted);font-size:12px;white-space:nowrap}
-.record-title{min-width:0;color:var(--ink);font-family:system-ui,sans-serif;font-size:12px;line-height:1.35}
-.record-score{display:grid;place-items:center;min-height:32px;border-radius:18px;background:#ffefe8;color:#df806d;font-size:12px;font-weight:700;white-space:nowrap}
-.empty-state{margin:15px 6px 4px;color:#a28e85;font-size:13px}.empty-state[hidden]{display:none}
-.app-footer{padding:14px 0 0;color:#aa9b94;text-align:center;font-size:11px}
-.toast{position:fixed;right:20px;bottom:max(20px,env(safe-area-inset-bottom));left:20px;z-index:10;display:none;width:fit-content;max-width:calc(100% - 40px);margin:auto;padding:11px 16px;border-radius:12px;background:#534740;color:#fff;font-size:12px}
-.toast.show{display:block}
-@media(max-width:480px){
-.app-shell{padding-right:14px;padding-left:14px}
-.topbar{min-height:145px;padding:6px 96px 16px 19px}
-.hero-art{top:18px;right:0;width:83px;height:112px}.mascot{width:82px;height:82px}.lamp{top:-8px;right:-2px;width:30px;height:38px}
-.clip-green{left:-18px}.clip-yellow{right:3px;bottom:-17px;width:14px;height:24px}
-.install-button{top:106px;right:84px;width:26px;height:26px;font-size:15px}
-.calendar-card{padding:10px 9px 11px;border-radius:20px}
-.calendar-heading{min-height:56px;margin-bottom:10px;padding:0 8px;border-radius:18px}.calendar-heading h2{font-size:clamp(18px,5vw,23px)}.month-arrow{width:30px;height:30px;font-size:27px}
-.weekdays{margin-bottom:5px;font-size:11px}.day-cell{height:64px;padding:4px 3px 2px}.day-number{width:23px;height:23px;font-size:13px}
-.day-meta{gap:3px;margin:3px 0 0 1px}.study-dot{width:5px;height:5px}.day-time{font-size:8px}
-.detail-card{padding:10px 10px 12px;border-radius:19px}.detail-heading{min-height:39px;padding-bottom:7px}.detail-heading h2{font-size:20px}.detail-heading strong{font-size:14px}
-.record-list{gap:5px}.record-row{grid-template-columns:48px minmax(0,1fr) 42px;gap:5px;min-height:43px;padding:5px 7px}.record-time,.record-title,.record-score{font-size:10px}.record-score{min-height:28px}
+const monthLabel=document.querySelector('#monthLabel');
+const calendarGrid=document.querySelector('#calendarGrid');
+const monthTotal=document.querySelector('#monthTotal');
+const monthCount=document.querySelector('#monthCount');
+const detailDate=document.querySelector('#detailDate');
+const dayTotal=document.querySelector('#dayTotal');
+const recordList=document.querySelector('#recordList');
+const emptyState=document.querySelector('#emptyState');
+const toast=document.querySelector('#toast');
+let records=[];
+let visibleMonth=new Date();
+visibleMonth=new Date(visibleMonth.getFullYear(),visibleMonth.getMonth(),1);
+let selectedDate='';
+let installPrompt=null;
+const byDate=new Map();
+const monthNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const weekNames=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+function parseDate(value){const p=value.split('-').map(Number);return new Date(p[0],p[1]-1,p[2]);}
+function keyForDate(date){return date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0')+'-'+String(date.getDate()).padStart(2,'0');}
+function formatDuration(seconds){const m=Math.round((Number(seconds)||0)/60);const h=Math.floor(m/60);const r=m%60;if(h&&r)return h+' hr '+r+' min';if(h)return h+' hr';return m+' min';}
+function compactDuration(seconds){const m=Math.round((Number(seconds)||0)/60);return m?m+' min':'<1 min';}
+function formatDayHeading(key){const d=parseDate(key);return d.toLocaleString('en-US',{month:'short'})+'. '+d.getDate()+' '+weekNames[d.getDay()];}
+function render(){
+ const y=visibleMonth.getFullYear(),m=visibleMonth.getMonth();monthLabel.textContent=monthNames[m]+' '+y;calendarGrid.replaceChildren();
+ const first=new Date(y,m,1).getDay(),days=new Date(y,m+1,0).getDate();
+ const monthly=records.filter(r=>{const d=parseDate(r.date);return d.getFullYear()===y&&d.getMonth()===m;});
+ monthTotal.textContent=formatDuration(monthly.reduce((s,r)=>s+(Number(r.seconds)||0),0));
+ monthCount.textContent=monthly.length+' records across '+new Set(monthly.map(r=>r.date)).size+' study days';
+ for(let i=0;i<first;i++){const blank=document.createElement('div');blank.className='day-cell empty';blank.setAttribute('aria-hidden','true');calendarGrid.append(blank);}
+ for(let day=1;day<=days;day++){
+  const date=new Date(y,m,day),key=keyForDate(date),items=byDate.get(key)||[],seconds=items.reduce((s,r)=>s+(Number(r.seconds)||0),0),button=document.createElement('button');
+  const classes=['day-cell'];if(date.getDay()===0)classes.push('sunday');if(date.getDay()===6)classes.push('saturday');if(key===selectedDate)classes.push('selected');if(key===keyForDate(new Date()))classes.push('today');
+  button.type='button';button.className=classes.join(' ');button.setAttribute('role','gridcell');button.setAttribute('aria-label',formatDayHeading(key)+(items.length?', '+compactDuration(seconds)+' study time':', no study records'));
+  const number=document.createElement('span');number.className='day-number';number.textContent=String(day);button.append(number);
+  if(items.length){const meta=document.createElement('span');meta.className='day-meta';const dot=document.createElement('i');dot.className='study-dot';dot.setAttribute('aria-hidden','true');const time=document.createElement('span');time.className='day-time';time.textContent=compactDuration(seconds);meta.append(dot,time);button.append(meta);}
+  button.addEventListener('click',()=>selectDay(key));calendarGrid.append(button);
+ }
+ if(selectedDate)renderDetails(selectedDate);
 }
+function renderDetails(key){
+ const items=(byDate.get(key)||[]).slice().sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+ detailDate.textContent=formatDayHeading(key);dayTotal.textContent=formatDuration(items.reduce((s,r)=>s+(Number(r.seconds)||0),0));recordList.replaceChildren();emptyState.hidden=items.length>0;
+ for(const record of items){
+  const row=document.createElement('article');row.className='record-row';
+  const time=document.createElement('span');time.className='record-time';time.textContent=record.time||'';
+  const title=document.createElement('span');title.className='record-title';title.textContent=record.title||'Untitled study';
+  const score=document.createElement('span');score.className='record-score';score.textContent=record.score&&record.score!=='0'?record.score+' pts':'—';
+  row.append(time,title,score);recordList.append(row);
+ }
+}
+function selectDay(key){selectedDate=key;render();}
+function chooseLatestStudyDay(){const y=visibleMonth.getFullYear(),m=visibleMonth.getMonth();const days=Array.from(new Set(records.map(r=>r.date))).filter(k=>{const d=parseDate(k);return d.getFullYear()===y&&d.getMonth()===m;}).sort();selectedDate=days.length?days[days.length-1]:keyForDate(new Date(y,m,1));}
+function moveMonth(n){visibleMonth=new Date(visibleMonth.getFullYear(),visibleMonth.getMonth()+n,1);chooseLatestStudyDay();render();}
+document.querySelector('#previousMonth').addEventListener('click',()=>moveMonth(-1));
+document.querySelector('#nextMonth').addEventListener('click',()=>moveMonth(1));
+async function loadRecords(){
+ try{const response=await fetch('./data/records.json?v='+Date.now(),{cache:'no-store'});if(!response.ok)throw new Error('HTTP '+response.status);records=await response.json();byDate.clear();for(const r of records){if(!byDate.has(r.date))byDate.set(r.date,[]);byDate.get(r.date).push(r);}chooseLatestStudyDay();render();}
+ catch(error){monthTotal.textContent='Unavailable';monthCount.textContent='Connect to the internet and try again.';detailDate.textContent='Records unavailable';emptyState.hidden=false;emptyState.textContent='Connect to the internet, then reload this page.';showToast('Could not load study records.');console.error(error);}
+}
+function showToast(message){toast.textContent=message;toast.classList.add('show');window.setTimeout(()=>toast.classList.remove('show'),3200);}
+window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();installPrompt=event;const button=document.querySelector('#installButton');button.hidden=false;button.addEventListener('click',async()=>{if(!installPrompt)return;installPrompt.prompt();await installPrompt.userChoice;installPrompt=null;button.hidden=true;},{once:true});});
+if('serviceWorker'in navigator&&/^https?:$/.test(location.protocol)){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(console.error));}
+const OWNER='Ellie150121',REPO='study-calendar',WORKFLOW='update-and-deploy.yml',KEY='lf_update_key';
+const updateButton=document.createElement('button');updateButton.id='updateButton';updateButton.className='install-button update-icon';updateButton.type='button';updateButton.textContent='↻';updateButton.setAttribute('aria-label','Update study records');updateButton.title='Update study records';document.querySelector('.topbar').append(updateButton);
+updateButton.addEventListener('click',async()=>{
+ if(!confirm('If your child is studying now, this may sign them out. Start the update?'))return;
+ let token=localStorage.getItem(KEY);if(!token){token=(prompt('Paste the GitHub update key')||'').trim();if(!token)return;localStorage.setItem(KEY,token);}
+ updateButton.disabled=true;
+ try{const response=await fetch('https://api.github.com/repos/'+OWNER+'/'+REPO+'/actions/workflows/'+WORKFLOW+'/dispatches',{method:'POST',headers:{'Accept':'application/vnd.github+json','Authorization':'Bearer '+token,'X-GitHub-Api-Version':'2022-11-28','Content-Type':'application/json'},body:JSON.stringify({ref:'main'})});
+  if(response.status===204){showToast('Update started. Check again in 3–5 minutes.');window.setTimeout(loadRecords,180000);window.setTimeout(loadRecords,300000);}
+  else{if(response.status===401)localStorage.removeItem(KEY);showToast('Could not start update (error '+response.status+').');}
+ }catch(error){showToast('Check your internet connection and try again.');}
+ window.setTimeout(()=>{updateButton.disabled=false;},60000);
+});
+loadRecords();

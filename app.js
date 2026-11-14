@@ -248,3 +248,16 @@ loadRecords();
     showToast('저장된 열쇠를 지웠어요.');
   });
 })();
+
+
+// ===== 업데이트 버튼을 헤더 제목 옆으로 옮기기 =====
+(function () {
+  const bar = document.querySelector('.topbar');
+  const brand = document.querySelector('.brand-copy');
+  const btn = document.querySelector('#updateButton');
+  if (!bar || !brand || !btn) return;
+  btn.textContent = '↻';
+  btn.setAttribute('aria-label', '지금 업데이트');
+  btn.classList.add('update-icon');
+  brand.after(btn);
+})();

@@ -210,7 +210,7 @@ jobs:
       - name: 앱 파일 묶기
         run: |
           mkdir -p _site/data
-          cp index.html app.css app.js manifest.json sw.js icon.svg icon-180.png icon-192.png icon-512.png _site/
+          cp index.html app.css app.js firebase-config.js manifest.json sw.js icon.svg icon-180.png icon-192.png icon-512.png _site/
           cp data/records.json _site/data/records.json
 
       - name: Pages 파일 업로드

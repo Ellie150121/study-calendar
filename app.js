@@ -7,11 +7,27 @@ const dayTotal=document.querySelector('#dayTotal');
 const recordList=document.querySelector('#recordList');
 const emptyState=document.querySelector('#emptyState');
 const toast=document.querySelector('#toast');
+const readingAuthMessage=document.querySelector('#readingAuthMessage');
+const googleSignIn=document.querySelector('#googleSignIn');
+const googleSignOut=document.querySelector('#googleSignOut');
+const signedInAs=document.querySelector('#signedInAs');
+const addBookButton=document.querySelector('#addBookButton');
+const readingForm=document.querySelector('#readingForm');
+const readingList=document.querySelector('#readingList');
+const readingEmpty=document.querySelector('#readingEmpty');
+const readingDateLabel=document.querySelector('#readingDateLabel');
 let records=[];
 let visibleMonth=new Date();
 visibleMonth=new Date(visibleMonth.getFullYear(),visibleMonth.getMonth(),1);
 let selectedDate='';
 let installPrompt=null;
+let firebaseReady=false;
+let auth=null;
+let db=null;
+let currentUser=null;
+let readingRecords=[];
+let readingUnsubscribe=null;
+let editingBookId=null;
 const byDate=new Map();
 const monthNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
 const weekNames=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -47,6 +63,7 @@ function renderDetails(key){
   const score=document.createElement('span');score.className='record-score';score.textContent=record.score&&record.score!=='0'?record.score+' pts':'—';
   row.append(time,title,score);recordList.append(row);
  }
+ renderReadingRecords();
 }
 function selectDay(key){selectedDate=key;render();}
 function chooseLatestStudyDay(){const y=visibleMonth.getFullYear(),m=visibleMonth.getMonth();const days=Array.from(new Set(records.map(r=>r.date))).filter(k=>{const d=parseDate(k);return d.getFullYear()===y&&d.getMonth()===m;}).sort();selectedDate=days.length?days[days.length-1]:keyForDate(new Date(y,m,1));}
@@ -72,4 +89,60 @@ updateButton.addEventListener('click',async()=>{
  }catch(error){showToast('Check your internet connection and try again.');}
  window.setTimeout(()=>{updateButton.disabled=false;},60000);
 });
+
+function setupFirebase(){
+ const config=window.FIREBASE_CONFIG;
+ if(!config||!config.apiKey||config.apiKey==='PASTE_FIREBASE_API_KEY_HERE'||!config.projectId){
+  readingAuthMessage.textContent='Connect Firebase once to sync book notes between your devices. Setup steps are in FIREBASE_SETUP_KO.md.';
+  readingEmpty.textContent='Firebase setup is needed before book notes can be saved.';
+  return;
+ }
+ if(!window.firebase){readingAuthMessage.textContent='Could not load secure sync. Check your internet connection and reload.';return;}
+ try{if(!firebase.apps.length)firebase.initializeApp(config);auth=firebase.auth();db=firebase.firestore();firebaseReady=true;googleSignIn.hidden=false;addBookButton.disabled=false;
+  auth.getRedirectResult().catch(error=>showToast('Google sign-in failed: '+error.message));
+  auth.onAuthStateChanged(user=>{
+   currentUser=user;googleSignIn.hidden=!!user;googleSignOut.hidden=!user;signedInAs.hidden=!user;addBookButton.disabled=!user;
+   signedInAs.textContent=user?'Synced as '+(user.email||'Google account'):'';
+   readingAuthMessage.textContent=user?'Your book notes sync securely on this account.':'Sign in with the same Google account on each device to sync.';
+   if(readingUnsubscribe){readingUnsubscribe();readingUnsubscribe=null;}
+   readingRecords=[];
+   if(user){readingUnsubscribe=db.collection('users').doc(user.uid).collection('readingBooks').onSnapshot(snapshot=>{readingRecords=snapshot.docs.map(doc=>({id:doc.id,...doc.data()}));renderReadingRecords();},error=>{console.error(error);showToast('Could not load book notes. Check Firestore rules.');});}
+   renderReadingRecords();
+  });
+ }catch(error){console.error(error);readingAuthMessage.textContent='Firebase setup is incomplete. Check the setup guide.';}
+}
+function renderReadingRecords(){
+ if(!readingList)return;readingList.replaceChildren();
+ const items=readingRecords.filter(item=>item.date===selectedDate).sort((a,b)=>(a.createdAt||'').localeCompare(b.createdAt||''));
+ readingEmpty.hidden=items.length>0;readingDateLabel.textContent=selectedDate?formatDayHeading(selectedDate):'—';
+ for(const item of items){
+  const card=document.createElement('article');card.className='reading-entry';
+  const title=document.createElement('h3');title.textContent=item.title||'Untitled book';card.append(title);
+  if(item.amount!==null&&item.amount!==undefined&&item.amount!==''){const amount=document.createElement('p');amount.className='reading-entry-amount';amount.textContent=String(item.amount)+' '+(item.unit==='minutes'?'min':'pages');card.append(amount);}
+  if(item.note){const note=document.createElement('p');note.className='reading-entry-note';note.textContent=item.note;card.append(note);}
+  const actions=document.createElement('div');actions.className='reading-entry-actions';
+  const edit=document.createElement('button');edit.type='button';edit.className='text-button';edit.textContent='Edit';edit.addEventListener('click',()=>editReading(item));
+  const remove=document.createElement('button');remove.type='button';remove.className='text-button delete-reading';remove.textContent='Delete';remove.addEventListener('click',()=>deleteReading(item));
+  actions.append(edit,remove);card.append(actions);readingList.append(card);
+ }
+}
+function resetReadingForm(){editingBookId=null;readingForm.reset();readingForm.hidden=true;document.querySelector('#bookUnit').value='pages';document.querySelector('.save-reading').textContent='Save entry';}
+addBookButton.addEventListener('click',()=>{if(!currentUser){showToast('Sign in with Google first.');return;}resetReadingForm();readingDateLabel.textContent=formatDayHeading(selectedDate);readingForm.hidden=false;document.querySelector('#bookTitle').focus();});
+document.querySelector('#cancelReading').addEventListener('click',resetReadingForm);
+googleSignIn.addEventListener('click',async()=>{if(!firebaseReady)return;try{const provider=new firebase.auth.GoogleAuthProvider();await auth.signInWithRedirect(provider);}catch(error){console.error(error);showToast('Could not start Google sign-in.');}});
+googleSignOut.addEventListener('click',async()=>{if(auth)await auth.signOut();resetReadingForm();});
+readingForm.addEventListener('submit',async event=>{
+ event.preventDefault();if(!currentUser||!db||!selectedDate)return;
+ const amountValue=document.querySelector('#bookAmount').value.trim();
+ const data={date:selectedDate,title:document.querySelector('#bookTitle').value.trim(),amount:amountValue===''?null:Number(amountValue),unit:document.querySelector('#bookUnit').value,note:document.querySelector('#bookNote').value.trim(),updatedAt:new Date().toISOString()};
+ if(!data.title)return;
+ const save=readingForm.querySelector('.save-reading');save.disabled=true;
+ const wasEditing=Boolean(editingBookId);
+ try{const collection=db.collection('users').doc(currentUser.uid).collection('readingBooks');if(editingBookId)await collection.doc(editingBookId).update(data);else await collection.add({...data,createdAt:new Date().toISOString()});resetReadingForm();showToast(wasEditing?'Book note updated.':'Book note saved.');}
+ catch(error){console.error(error);showToast('Could not save. Check your connection and Firebase rules.');}
+ finally{save.disabled=false;}
+});
+function editReading(item){editingBookId=item.id;document.querySelector('#bookTitle').value=item.title||'';document.querySelector('#bookAmount').value=item.amount??'';document.querySelector('#bookUnit').value=item.unit||'pages';document.querySelector('#bookNote').value=item.note||'';document.querySelector('.save-reading').textContent='Update entry';readingDateLabel.textContent=formatDayHeading(item.date);readingForm.hidden=false;readingForm.scrollIntoView({behavior:'smooth',block:'center'});}
+async function deleteReading(item){if(!currentUser||!confirm('Delete this book note?'))return;try{await db.collection('users').doc(currentUser.uid).collection('readingBooks').doc(item.id).delete();showToast('Book note deleted.');}catch(error){console.error(error);showToast('Could not delete the book note.');}}
 loadRecords();
+setupFirebase();

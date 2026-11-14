@@ -10,7 +10,7 @@
   <link rel="manifest" href="./manifest.json">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" sizes="180x180" href="./icon-180.png">
-  <link rel="stylesheet" href="./app.css?v=journey-1">
+  <link rel="stylesheet" href="./app.css?v=journey-reading-1">
 </head>
 <body>
 <main class="app-shell">
@@ -40,6 +40,30 @@
     <div class="weekdays" aria-hidden="true"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div>
     <div id="calendarGrid" class="calendar-grid" role="grid" aria-label="Calendar dates"></div>
   </section>
+  <section class="reading-card" aria-labelledby="readingTitle">
+    <header class="reading-heading">
+      <div class="reading-title-wrap"><span class="book-mark" aria-hidden="true">▱</span><h2 id="readingTitle">English Reading</h2></div>
+      <button id="addBookButton" class="reading-add" type="button" disabled>＋ Add book</button>
+    </header>
+    <p id="readingAuthMessage" class="reading-hint">Sign in with Google to sync reading notes across your devices.</p>
+    <div class="reading-auth-actions">
+      <button id="googleSignIn" class="google-button" type="button" hidden>Continue with Google</button>
+      <button id="googleSignOut" class="text-button" type="button" hidden>Sign out</button>
+      <span id="signedInAs" class="signed-in-as" hidden></span>
+    </div>
+    <form id="readingForm" class="reading-form" hidden>
+      <label>Book title<input id="bookTitle" name="title" maxlength="160" required placeholder="e.g. Charlotte’s Web"></label>
+      <div class="reading-amount-row">
+        <label>Read amount<input id="bookAmount" name="amount" type="number" min="0" max="99999" inputmode="numeric" placeholder="Optional"></label>
+        <label>Unit<select id="bookUnit" name="unit"><option value="pages">pages</option><option value="minutes">minutes</option></select></label>
+      </div>
+      <label>Favorite line or reflection<textarea id="bookNote" name="note" maxlength="1200" rows="3" placeholder="A sentence Eunseo liked, or what she thought about the book"></textarea></label>
+      <p class="reading-date-hint">Saving for <strong id="readingDateLabel"></strong></p>
+      <div class="reading-form-actions"><button class="save-reading" type="submit">Save entry</button><button id="cancelReading" class="cancel-reading" type="button">Cancel</button></div>
+    </form>
+    <div id="readingList" class="reading-list"></div>
+    <p id="readingEmpty" class="reading-empty">No book notes for this day yet.</p>
+  </section>
   <section class="detail-card" aria-label="Selected day's study records">
     <header class="detail-heading"><h2 id="detailDate">Select a day</h2><strong id="dayTotal"></strong></header>
     <div id="recordList" class="record-list"></div>
@@ -48,6 +72,11 @@
   <footer class="app-footer">Small steps make a bright journey.</footer>
 </main>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script src="./app.js?v=journey-1" defer></script>
+<script src="./firebase-config.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="./app.js?v=journey-reading-1" defer></script>
 </body>
 </html>
+

@@ -1,5 +1,5 @@
-const CACHE_NAME = 'littlefox-study-calendar-journey-v1';
-const APP_FILES = ['./', './index.html', './app.css', './app.js', './manifest.json', './icon.svg'];
+const CACHE_NAME = 'littlefox-study-calendar-reading-v2';
+const APP_FILES = ['./', './index.html', './app.css', './app.js', './firebase-config.js', './manifest.json', './icon.svg'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_FILES)));
   self.skipWaiting();

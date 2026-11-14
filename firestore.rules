@@ -1,0 +1,27 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId}/readingBooks/{entryId} {
+      allow read, delete: if request.auth != null
+        && request.auth.uid == userId;
+      allow create, update: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.data.keys().hasOnly([
+          'date', 'title', 'amount', 'unit', 'note', 'createdAt', 'updatedAt'
+        ])
+        && request.resource.data.date is string
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.title.size() <= 160
+        && (request.resource.data.amount == null
+          || (request.resource.data.amount is number
+            && request.resource.data.amount >= 0
+            && request.resource.data.amount <= 99999))
+        && request.resource.data.unit in ['pages', 'minutes']
+        && request.resource.data.note is string
+        && request.resource.data.note.size() <= 1200
+        && request.resource.data.createdAt is string
+        && request.resource.data.updatedAt is string;
+    }
+  }
+}

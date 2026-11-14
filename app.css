@@ -142,3 +142,20 @@ h1 { margin: 0; font-size: 19px; font-weight: 800; letter-spacing: -.04em; }
 .day-cell.today .day-number { box-shadow: inset 0 0 0 1.5px #b7c5f5; }
 .day-time { color: #7f8cbc; }
 .legend-dot { background: #b9c9ff; }
+
+
+/* 상단 배너와 요약 상자: 높이 약 30% 축소 */
+.topbar { gap: 9px; margin: 2px 2px 15px; }
+.brand-mark { width: 31px; height: 31px; border-radius: 10px; font-size: 17px; box-shadow: 0 5px 12px #496bea30; }
+.eyebrow { margin-bottom: 2px; font-size: 8px; }
+h1 { font-size: 15px; }
+.install-button { padding: 7px 10px; border-radius: 10px; font-size: 11px; }
+
+.summary-card { min-height: 0; padding: 9px 18px; border-radius: 16px; }
+.summary-label { margin-bottom: 2px; font-size: 10px; }
+.summary-time { font-size: 17px; }
+.summary-detail { margin-top: 2px; font-size: 9px; }
+.summary-art { width: 44px; height: 44px; }
+.summary-art span { font-size: 20px; }
+.summary-art i { top: 5px; right: 7px; font-size: 10px; }
+.calendar-card { margin-top: 14px; }

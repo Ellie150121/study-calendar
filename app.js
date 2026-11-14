@@ -185,3 +185,66 @@ if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
 }
 
 loadRecords();
+
+
+// ===== 지금 업데이트 버튼 =====
+(function () {
+  const OWNER = 'Ellie150121';
+  const REPO = 'study-calendar';
+  const WORKFLOW = 'update-and-deploy.yml';
+  const KEY = 'lf_update_key';
+
+  const style = document.createElement('style');
+  style.textContent = `
+    .update-box { margin-top: 18px; text-align: center; }
+    .update-button { width: 100%; border: 0; border-radius: 16px; padding: 15px; background: #496bea; color: #fff; font-size: 14px; font-weight: 700; }
+    .update-button:disabled { background: #a9b6ee; }
+    .update-link { margin-top: 10px; border: 0; background: none; color: #9aa1b5; font-size: 11px; text-decoration: underline; }
+  `;
+  document.head.append(style);
+
+  const box = document.createElement('div');
+  box.className = 'update-box';
+  box.innerHTML = '<button class="update-button" id="updateButton">↻ 지금 업데이트</button><button class="update-link" id="clearKey">열쇠 지우기</button>';
+  document.querySelector('.app-footer').before(box);
+
+  const button = document.querySelector('#updateButton');
+  button.addEventListener('click', async () => {
+    if (!confirm('아이가 지금 공부 중이면 아이 화면이 로그아웃될 수 있어요.\n업데이트를 시작할까요?')) return;
+    let token = localStorage.getItem(KEY);
+    if (!token) {
+      token = (prompt('업데이트 열쇠를 붙여 넣어 주세요') || '').trim();
+      if (!token) return;
+      localStorage.setItem(KEY, token);
+    }
+    button.disabled = true;
+    try {
+      const response = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/actions/workflows/${WORKFLOW}/dispatches`, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/vnd.github+json',
+          'Authorization': `Bearer ${token}`,
+          'X-GitHub-Api-Version': '2022-11-28',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ ref: 'main' })
+      });
+      if (response.status === 204) {
+        showToast('업데이트를 시작했어요. 3~5분 뒤에 다시 열어 보세요.');
+        setTimeout(loadRecords, 180000);
+        setTimeout(loadRecords, 300000);
+      } else {
+        if (response.status === 401) localStorage.removeItem(KEY);
+        showToast(`업데이트를 시작하지 못했어요 (오류 ${response.status})`);
+      }
+    } catch (error) {
+      showToast('인터넷 연결을 확인해 주세요.');
+    }
+    setTimeout(() => { button.disabled = false; }, 60000);
+  });
+
+  document.querySelector('#clearKey').addEventListener('click', () => {
+    localStorage.removeItem(KEY);
+    showToast('저장된 열쇠를 지웠어요.');
+  });
+})();

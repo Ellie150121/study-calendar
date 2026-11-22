@@ -10,7 +10,7 @@
   <link rel="manifest" href="./manifest.json">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" sizes="180x180" href="./icon-180.png">
-  <link rel="stylesheet" href="./app.css?v=journey-reading-1">
+  <link rel="stylesheet" href="./app.css?v=journey-plan-1">
 </head>
 <body>
 <main class="app-shell">
@@ -39,6 +39,30 @@
     </div>
     <div class="weekdays" aria-hidden="true"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div>
     <div id="calendarGrid" class="calendar-grid" role="grid" aria-label="Calendar dates"></div>
+  </section>
+  <section class="plan-card" aria-labelledby="planTitle">
+    <header class="plan-heading">
+      <div><h2 id="planTitle">Daily Study Plan</h2><p id="planDateLabel" class="plan-date"></p></div>
+      <strong id="planProgress">0 / 0 done</strong>
+    </header>
+    <p id="planHint" class="plan-hint">Sign in with Google to manage Eunseo’s study plan.</p>
+    <button id="planSignInButton" class="google-button plan-signin" type="button" hidden>Continue with Google</button>
+    <div id="planList" class="plan-list"></div>
+    <div class="plan-actions">
+      <button id="addPlanTaskButton" class="plan-secondary" type="button" disabled>＋ Add for this day</button>
+      <button id="editPlanTemplateButton" class="plan-secondary" type="button" disabled>Edit daily schedule</button>
+    </div>
+    <form id="planTaskForm" class="plan-form" hidden>
+      <label>Task<input id="planTaskTitle" maxlength="100" required placeholder="e.g. Review vocabulary"></label>
+      <label>Target minutes <span class="optional-label">(optional)</span><input id="planTaskMinutes" type="number" min="1" max="600" inputmode="numeric" placeholder="Optional"></label>
+      <div class="plan-form-actions"><button class="plan-save" type="submit">Save task</button><button id="cancelPlanTask" class="plan-cancel" type="button">Cancel</button></div>
+    </form>
+    <form id="planTemplateForm" class="plan-form" hidden>
+      <p class="plan-form-note">Changes to the daily schedule start tomorrow. Past days stay as they are.</p>
+      <div id="templateTaskList" class="template-task-list"></div>
+      <button id="addTemplateTaskButton" class="plan-secondary" type="button">＋ Add a daily task</button>
+      <div class="plan-form-actions"><button class="plan-save" type="submit">Save daily schedule</button><button id="cancelTemplate" class="plan-cancel" type="button">Cancel</button></div>
+    </form>
   </section>
   <section class="reading-card" aria-labelledby="readingTitle">
     <header class="reading-heading">
@@ -76,7 +100,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
-<script src="./app.js?v=journey-reading-1" defer></script>
+<script src="./app.js?v=journey-plan-1" defer></script>
 </body>
 </html>
 

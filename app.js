@@ -16,6 +16,16 @@ const readingForm=document.querySelector('#readingForm');
 const readingList=document.querySelector('#readingList');
 const readingEmpty=document.querySelector('#readingEmpty');
 const readingDateLabel=document.querySelector('#readingDateLabel');
+const planDateLabel=document.querySelector('#planDateLabel');
+const planProgress=document.querySelector('#planProgress');
+const planHint=document.querySelector('#planHint');
+const planSignInButton=document.querySelector('#planSignInButton');
+const planList=document.querySelector('#planList');
+const addPlanTaskButton=document.querySelector('#addPlanTaskButton');
+const editPlanTemplateButton=document.querySelector('#editPlanTemplateButton');
+const planTaskForm=document.querySelector('#planTaskForm');
+const templateForm=document.querySelector('#planTemplateForm');
+const templateTaskList=document.querySelector('#templateTaskList');
 let records=[];
 let visibleMonth=new Date();
 visibleMonth=new Date(visibleMonth.getFullYear(),visibleMonth.getMonth(),1);
@@ -29,6 +39,17 @@ let readingRecords=[];
 let readingUnsubscribe=null;
 let editingBookId=null;
 let authErrorMessage='';
+let planTemplates=[];
+let planDayData={completedTaskIds:[],customTasks:[]};
+let planDayUnsubscribe=null;
+let planTemplateUnsubscribe=null;
+let editingCustomTaskId=null;
+const DEFAULT_PLAN_TASKS=[
+ {id:'littlefox',title:'Little Fox',minutes:null},
+ {id:'english-book',title:'English book',minutes:10},
+ {id:'ebs-video',title:'EBS viewing',minutes:null},
+ {id:'reading-workbook',title:'Reading comprehension workbook',minutes:null}
+];
 const byDate=new Map();
 const monthNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
 const weekNames=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -65,14 +86,15 @@ function renderDetails(key){
   row.append(time,title,score);recordList.append(row);
  }
  renderReadingRecords();
+  renderStudyPlan();
 }
-function selectDay(key){selectedDate=key;render();}
+function selectDay(key){selectedDate=key;render();subscribePlanDay();}
 function chooseLatestStudyDay(){const y=visibleMonth.getFullYear(),m=visibleMonth.getMonth();const days=Array.from(new Set(records.map(r=>r.date))).filter(k=>{const d=parseDate(k);return d.getFullYear()===y&&d.getMonth()===m;}).sort();selectedDate=days.length?days[days.length-1]:keyForDate(new Date(y,m,1));}
-function moveMonth(n){visibleMonth=new Date(visibleMonth.getFullYear(),visibleMonth.getMonth()+n,1);chooseLatestStudyDay();render();}
+function moveMonth(n){visibleMonth=new Date(visibleMonth.getFullYear(),visibleMonth.getMonth()+n,1);chooseLatestStudyDay();render();subscribePlanDay();}
 document.querySelector('#previousMonth').addEventListener('click',()=>moveMonth(-1));
 document.querySelector('#nextMonth').addEventListener('click',()=>moveMonth(1));
 async function loadRecords(){
- try{const response=await fetch('./data/records.json?v='+Date.now(),{cache:'no-store'});if(!response.ok)throw new Error('HTTP '+response.status);records=await response.json();byDate.clear();for(const r of records){if(!byDate.has(r.date))byDate.set(r.date,[]);byDate.get(r.date).push(r);}chooseLatestStudyDay();render();}
+ try{const response=await fetch('./data/records.json?v='+Date.now(),{cache:'no-store'});if(!response.ok)throw new Error('HTTP '+response.status);records=await response.json();byDate.clear();for(const r of records){if(!byDate.has(r.date))byDate.set(r.date,[]);byDate.get(r.date).push(r);}chooseLatestStudyDay();render();subscribePlanDay();}
  catch(error){monthTotal.textContent='Unavailable';monthCount.textContent='Connect to the internet and try again.';detailDate.textContent='Records unavailable';emptyState.hidden=false;emptyState.textContent='Connect to the internet, then reload this page.';showToast('Could not load study records.');console.error(error);}
 }
 function showToast(message){toast.textContent=message;toast.classList.add('show');window.setTimeout(()=>toast.classList.remove('show'),3200);}
@@ -89,8 +111,148 @@ function showAuthError(error){
  authErrorMessage=(messages[code]||'Google sign-in did not finish. Error code: '+code)+' ( '+code+' )';
  readingAuthMessage.textContent=authErrorMessage;
  readingAuthMessage.style.color='#b94f3d';
+ if(planHint){planHint.textContent=authErrorMessage;planHint.style.color='#b94f3d';}
  console.error('Google sign-in failed:',code,error&&error.message||'');
 }
+function planCollection(name){return db.collection('users').doc(currentUser.uid).collection(name);}
+function planEffectiveFor(date){
+ return planTemplates.filter(item=>item.effectiveFrom<=date).sort((a,b)=>b.effectiveFrom.localeCompare(a.effectiveFrom))[0]||null;
+}
+function renderStudyPlan(){
+ if(!planList)return;
+ planDateLabel.textContent=selectedDate?formatDayHeading(selectedDate):'Select a date';
+ const signedIn=Boolean(currentUser);
+ planSignInButton.hidden=signedIn||!firebaseReady;
+ addPlanTaskButton.disabled=!signedIn;
+ editPlanTemplateButton.disabled=!signedIn;
+ const template= signedIn ? planEffectiveFor(selectedDate) : null;
+ const defaults=(template&&Array.isArray(template.tasks)?template.tasks:DEFAULT_PLAN_TASKS);
+ const custom=signedIn&&Array.isArray(planDayData.customTasks)?planDayData.customTasks:[];
+ const tasks=[...defaults.map(task=>({...task,custom:false})),...custom.map(task=>({...task,custom:true}))];
+ const completed=new Set(signedIn&&Array.isArray(planDayData.completedTaskIds)?planDayData.completedTaskIds:[]);
+ const completedCount=tasks.filter(task=>completed.has(task.id)).length;
+ planProgress.textContent=completedCount+' / '+tasks.length+' done';
+ if(!signedIn){
+  if(firebaseReady){planHint.textContent='Sign in to save daily checkmarks and sync this plan across devices.';planHint.style.color='';}
+  else{planHint.textContent='Firebase setup is needed to save and sync plans.';}
+ }else{
+  planHint.textContent=planTemplates.length?'Check tasks as Eunseo finishes them.':'Loading daily plan…';
+  planHint.style.color='';
+ }
+ planList.replaceChildren();
+ for(const task of tasks){
+  const row=document.createElement('div');row.className='plan-row';
+  const check=document.createElement('input');check.type='checkbox';check.className='plan-check';check.checked=completed.has(task.id);check.disabled=!signedIn;check.setAttribute('aria-label','Mark '+task.title+' complete');
+  check.addEventListener('change',()=>togglePlanTask(task.id,check.checked));
+  const title=document.createElement('span');title.className='plan-task-title'+(check.checked?' completed':'');title.textContent=task.title;
+  row.append(check,title);
+  if(task.minutes){const target=document.createElement('span');target.className='plan-task-target';target.textContent=task.minutes+' min';row.append(target);}
+  else if(task.custom){row.append(document.createElement('span'));}
+  if(task.custom&&signedIn){
+   const actions=document.createElement('div');actions.className='plan-row-actions';
+   const edit=document.createElement('button');edit.type='button';edit.textContent='Edit';edit.addEventListener('click',()=>openPlanTaskForm(task));
+   const remove=document.createElement('button');remove.type='button';remove.textContent='Delete';remove.addEventListener('click',()=>deleteCustomPlanTask(task.id));
+   actions.append(edit,remove);row.append(actions);
+  }
+  planList.append(row);
+ }
+}
+function subscribePlanTemplates(){
+ if(planTemplateUnsubscribe){planTemplateUnsubscribe();planTemplateUnsubscribe=null;}
+ if(!currentUser){planTemplates=[];renderStudyPlan();return;}
+ const ref=planCollection('studyPlanTemplates');
+ planTemplateUnsubscribe=ref.onSnapshot(snapshot=>{
+  if(snapshot.empty){
+   ref.doc('initial').set({effectiveFrom:'0000-01-01',tasks:DEFAULT_PLAN_TASKS,updatedAt:new Date().toISOString()}).catch(error=>{console.error(error);planHint.textContent='Could not save the default plan. Check Firestore rules.';});
+   return;
+  }
+  planTemplates=snapshot.docs.map(doc=>({id:doc.id,...doc.data()}));
+  renderStudyPlan();
+ },error=>{console.error(error);planHint.textContent='Could not load the plan. Check Firestore rules.';});
+}
+function subscribePlanDay(){
+ if(planDayUnsubscribe){planDayUnsubscribe();planDayUnsubscribe=null;}
+ planDayData={completedTaskIds:[],customTasks:[]};
+ if(!currentUser||!selectedDate){renderStudyPlan();return;}
+ const date=selectedDate;
+ planDayUnsubscribe=planCollection('studyPlanDays').doc(date).onSnapshot(snapshot=>{
+  if(date!==selectedDate)return;
+  planDayData=snapshot.exists?snapshot.data():{completedTaskIds:[],customTasks:[]};
+  renderStudyPlan();
+ },error=>{console.error(error);planHint.textContent='Could not load this day’s plan. Check Firestore rules.';});
+ renderStudyPlan();
+}
+async function savePlanDay(changes){
+ if(!currentUser||!selectedDate)return false;
+ const data={date:selectedDate,completedTaskIds:planDayData.completedTaskIds||[],customTasks:planDayData.customTasks||[],...changes,updatedAt:new Date().toISOString()};
+ try{await planCollection('studyPlanDays').doc(selectedDate).set(data,{merge:true});planDayData=data;renderStudyPlan();return true;}
+ catch(error){console.error(error);showToast('Could not save today’s plan. Check Firestore rules.');return false;}
+}
+async function togglePlanTask(id,checked){
+ const values=new Set(planDayData.completedTaskIds||[]);checked?values.add(id):values.delete(id);
+ await savePlanDay({completedTaskIds:Array.from(values)});
+}
+function openPlanTaskForm(task=null){
+ editingCustomTaskId=task?task.id:null;
+ document.querySelector('#planTaskTitle').value=task?task.title:'';
+ document.querySelector('#planTaskMinutes').value=task&&task.minutes?task.minutes:'';
+ planTaskForm.querySelector('.plan-save').textContent=task?'Update task':'Save task';
+ planTaskForm.hidden=false;templateForm.hidden=true;
+ document.querySelector('#planTaskTitle').focus();
+}
+function closePlanTaskForm(){editingCustomTaskId=null;planTaskForm.reset();planTaskForm.hidden=true;planTaskForm.querySelector('.plan-save').textContent='Save task';}
+function tomorrowKey(){const date=new Date();date.setDate(date.getDate()+1);return keyForDate(date);}
+function openTemplateEditor(){
+ const template=planEffectiveFor(tomorrowKey());
+ const tasks=(template&&Array.isArray(template.tasks)?template.tasks:DEFAULT_PLAN_TASKS).map(task=>({...task}));
+ templateTaskList.replaceChildren();tasks.forEach(task=>addTemplateTaskRow(task));
+ templateForm.hidden=false;planTaskForm.hidden=true;
+ templateForm.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function addTemplateTaskRow(task={id:'task_'+Date.now(),title:'',minutes:null}){
+ const row=document.createElement('div');row.className='template-task-row';row.dataset.taskId=task.id||'task_'+Date.now();
+ const title=document.createElement('input');title.type='text';title.maxLength=100;title.required=true;title.placeholder='Daily task';title.value=task.title||'';title.setAttribute('aria-label','Daily task name');
+ const minutes=document.createElement('input');minutes.className='template-minutes';minutes.type='number';minutes.min='1';minutes.max='600';minutes.placeholder='Minutes';minutes.value=task.minutes||'';minutes.setAttribute('aria-label','Target minutes, optional');
+ const remove=document.createElement('button');remove.type='button';remove.textContent='×';remove.setAttribute('aria-label','Delete daily task');remove.addEventListener('click',()=>row.remove());
+ row.append(title,minutes,remove);templateTaskList.append(row);
+}
+async function deleteCustomPlanTask(id){
+ const tasks=(planDayData.customTasks||[]).filter(task=>task.id!==id);
+ const completed=(planDayData.completedTaskIds||[]).filter(taskId=>taskId!==id);
+ await savePlanDay({customTasks:tasks,completedTaskIds:completed});
+}
+addPlanTaskButton.addEventListener('click',()=>openPlanTaskForm());
+editPlanTemplateButton.addEventListener('click',openTemplateEditor);
+planSignInButton.addEventListener('click',()=>googleSignIn.click());
+document.querySelector('#cancelPlanTask').addEventListener('click',closePlanTaskForm);
+document.querySelector('#cancelTemplate').addEventListener('click',()=>{templateForm.reset();templateForm.hidden=true;});
+document.querySelector('#addTemplateTaskButton').addEventListener('click',()=>addTemplateTaskRow());
+planTaskForm.addEventListener('submit',async event=>{
+ event.preventDefault();
+ const title=document.querySelector('#planTaskTitle').value.trim();
+ const rawMinutes=document.querySelector('#planTaskMinutes').value.trim();
+ if(!title)return;
+ const minutes=rawMinutes?Number(rawMinutes):null;
+ let custom=[...(planDayData.customTasks||[])];
+ const task={id:editingCustomTaskId||('custom_'+Date.now()),title,minutes};
+ if(editingCustomTaskId)custom=custom.map(item=>item.id===editingCustomTaskId?task:item);else custom.push(task);
+ if(await savePlanDay({customTasks:custom}))closePlanTaskForm();
+});
+templateForm.addEventListener('submit',async event=>{
+ event.preventDefault();
+ const tasks=Array.from(templateTaskList.querySelectorAll('.template-task-row')).map(row=>{
+  const title=row.querySelector('input[type="text"]').value.trim();
+  const rawMinutes=row.querySelector('.template-minutes').value.trim();
+  return{id:row.dataset.taskId,title,minutes:rawMinutes?Number(rawMinutes):null};
+ }).filter(task=>task.title);
+ if(!tasks.length){showToast('Keep at least one daily task.');return;}
+ if(tasks.length>30){showToast('A daily plan can have up to 30 tasks.');return;}
+ const effectiveFrom=tomorrowKey();
+ try{
+  await planCollection('studyPlanTemplates').doc('from_'+effectiveFrom).set({effectiveFrom,tasks,updatedAt:new Date().toISOString()});
+  templateForm.hidden=true;showToast('Daily schedule saved for tomorrow onward.');
+ }catch(error){console.error(error);showToast('Could not save the daily schedule. Check Firestore rules.');}
+});
 window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();installPrompt=event;const button=document.querySelector('#installButton');button.hidden=false;button.addEventListener('click',async()=>{if(!installPrompt)return;installPrompt.prompt();await installPrompt.userChoice;installPrompt=null;button.hidden=true;},{once:true});});
 if('serviceWorker'in navigator&&/^https?:$/.test(location.protocol)){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(console.error));}
 const OWNER='Ellie150121',REPO='study-calendar',WORKFLOW='update-and-deploy.yml',KEY='lf_update_key';
@@ -115,6 +277,7 @@ function setupFirebase(){
  }
  if(!window.firebase){readingAuthMessage.textContent='Could not load secure sync. Check your internet connection and reload.';return;}
  try{if(!firebase.apps.length)firebase.initializeApp(config);auth=firebase.auth();db=firebase.firestore();firebaseReady=true;googleSignIn.hidden=false;addBookButton.disabled=false;
+  renderStudyPlan();
   auth.getRedirectResult().then(result=>{
    if(result&&result.user){authErrorMessage='';showToast('Signed in as '+(result.user.email||'Google account'));}
   }).catch(showAuthError);
@@ -126,7 +289,9 @@ function setupFirebase(){
    if(readingUnsubscribe){readingUnsubscribe();readingUnsubscribe=null;}
    readingRecords=[];
    if(user){readingUnsubscribe=db.collection('users').doc(user.uid).collection('readingBooks').onSnapshot(snapshot=>{readingRecords=snapshot.docs.map(doc=>({id:doc.id,...doc.data()}));renderReadingRecords();},error=>{console.error(error);showToast('Could not load book notes. Check Firestore rules.');});}
-   renderReadingRecords();
+    renderReadingRecords();
+    subscribePlanTemplates();
+    subscribePlanDay();
   });
  }catch(error){console.error(error);readingAuthMessage.textContent='Firebase setup is incomplete. Check the setup guide.';}
 }
